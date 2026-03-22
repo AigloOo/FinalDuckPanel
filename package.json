@@ -4,12 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "node server.js",
-    "start:prod": "npm run check:db-url && npx prisma migrate deploy && npm run db:seed && node server.js",
-    "check:db-url": "node scripts/check-database-url.js",
-    "lint": "next lint",
-    "postinstall": "prisma generate",
+    "start:prod": "node scripts/startup.js",
     "db:migrate": "prisma migrate dev",
     "db:seed": "node prisma/seed.js"
   },

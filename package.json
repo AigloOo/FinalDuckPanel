@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "node server.js",
+    "start:prod": "npm run check:db-url && npx prisma migrate deploy && npm run db:seed && node server.js",
+    "check:db-url": "node scripts/check-database-url.js",
     "lint": "next lint",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",

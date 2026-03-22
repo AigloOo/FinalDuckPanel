@@ -1,6 +1,6 @@
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { formatDate } from '@/lib/utils';
+import { formatDate, getTimeParts } from '@/lib/utils';
 import Link from 'next/link';
 
 export default async function DashboardPage() {
@@ -22,13 +22,7 @@ export default async function DashboardPage() {
     }),
   ]);
 
-  const hour = new Date().getHours();
-  let greeting = '';
-  let greetingEmoji = '';
-  if (hour >= 5 && hour < 12) { greeting = 'Bonjour'; greetingEmoji = '🌅'; }
-  else if (hour >= 12 && hour < 18) { greeting = 'Bon après-midi'; greetingEmoji = '☀️'; }
-  else if (hour >= 18 && hour < 22) { greeting = 'Bonsoir'; greetingEmoji = '🌆'; }
-  else { greeting = 'Bonne nuit'; greetingEmoji = '🌙'; }
+  const { label: greeting, emoji: greetingEmoji } = getTimeParts();
 
   return (
     <div className="p-6 max-w-6xl mx-auto animate-fade-in">

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { getTimeParts } from '@/lib/utils';
 
 interface SidebarProps {
   userName: string;
@@ -25,12 +26,7 @@ export default function Sidebar({ userName }: SidebarProps) {
     router.push('/login');
   };
 
-  const hour = new Date().getHours();
-  let timeLabel = '';
-  if (hour >= 5 && hour < 12) timeLabel = 'Bonjour';
-  else if (hour >= 12 && hour < 18) timeLabel = 'Bon après-midi';
-  else if (hour >= 18 && hour < 22) timeLabel = 'Bonsoir';
-  else timeLabel = 'Bonne nuit';
+  const { label: timeLabel } = getTimeParts();
 
   return (
     <aside className="w-60 bg-white border-r border-slate-200 flex flex-col h-full">

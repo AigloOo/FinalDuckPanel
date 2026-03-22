@@ -6,6 +6,8 @@ import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { getUploadDir } from '@/lib/server-utils';
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
 export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -30,7 +32,7 @@ export async function POST(request: NextRequest) {
     if (!file.type.startsWith('image/')) {
       return NextResponse.json({ error: 'Images uniquement' }, { status: 400 });
     }
-    if (file.size > 10 * 1024 * 1024) {
+    if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json({ error: 'Fichier trop volumineux (max 10MB)' }, { status: 400 });
     }
 
@@ -39,7 +41,7 @@ export async function POST(request: NextRequest) {
     const ext = path.extname(file.name) || '.jpg';
     const filename = `${publicId}${ext}`;
     const filepath = path.join(uploadDir, filename);
-    const extRegex = new RegExp(`\\${ext}$`);
+    const jpegBase = filepath.slice(0, -ext.length);
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -50,12 +52,12 @@ export async function POST(request: NextRequest) {
         .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
         .jpeg({ quality: 85 })
         .toBuffer();
-      const jpegFilepath = filepath.replace(extRegex, '.jpg');
+      const jpegFilepath = `${jpegBase}.jpg`;
       await writeFile(jpegFilepath, optimized);
       
       const image = await prisma.image.create({
         data: {
-          filename: filename.replace(extRegex, '.jpg'),
+          filename: `${publicId}.jpg`,
           originalName: file.name,
           mimeType: 'image/jpeg',
           size: optimized.length,

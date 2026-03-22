@@ -1,9 +1,14 @@
-export function getGreeting(name: string): string {
+export function getTimeParts(): { label: string; emoji: string } {
   const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return `🌅 Bonjour ${name} !`;
-  if (hour >= 12 && hour < 18) return `☀️ Bon après-midi ${name} !`;
-  if (hour >= 18 && hour < 22) return `🌆 Bonsoir ${name} !`;
-  return `🌙 Bonne nuit ${name} !`;
+  if (hour >= 5 && hour < 12) return { label: 'Bonjour', emoji: '🌅' };
+  if (hour >= 12 && hour < 18) return { label: 'Bon après-midi', emoji: '☀️' };
+  if (hour >= 18 && hour < 22) return { label: 'Bonsoir', emoji: '🌆' };
+  return { label: 'Bonne nuit', emoji: '🌙' };
+}
+
+export function getGreeting(name: string): string {
+  const { emoji, label } = getTimeParts();
+  return `${emoji} ${label} ${name} !`;
 }
 
 export function formatBytes(bytes: number): string {

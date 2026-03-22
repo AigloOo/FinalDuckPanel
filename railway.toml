@@ -1,5 +1,4 @@
 [build]
-builder = "nixpacks"
 buildCommand = "npm ci && npm run build"
 
 [deploy]
@@ -9,3 +8,4 @@ restartPolicyMaxRetries = 3
 
 [env]
 PRISMA_SKIP_VALIDATION = "true"
+NODE_ENV = "production"

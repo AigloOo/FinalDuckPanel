@@ -53,7 +53,7 @@ async function startup() {
   console.log("[startup] Starting Next.js server...");
   
   const dev = process.env.NODE_ENV !== "production";
-  const app = next({ dev });
+  const app = next({ dev, dir: path.resolve(__dirname, "..") });
   const handle = app.getRequestHandler();
 
   const uploadsDir = process.env.UPLOAD_DIR || path.join(process.cwd(), "uploads");

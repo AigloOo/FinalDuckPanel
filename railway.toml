@@ -1,8 +1,7 @@
 [build]
-buildCommand = "npm ci && npm run build"
+dockerfile = "Dockerfile"
 
 [deploy]
-startCommand = "node scripts/startup.js"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 

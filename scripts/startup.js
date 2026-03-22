@@ -8,22 +8,39 @@ const fs = require("fs");
 
 async function startup() {
   const DATABASE_URL = process.env.DATABASE_URL || "";
-  const isValid = /^postgres(ql)?:\/\//.test(DATABASE_URL);
+  
+  console.log("[startup] ═══════════════════════════════════════");
+  console.log("[startup] 🦆 Duc Panel Startup");
+  console.log("[startup] ═══════════════════════════════════════");
+  
+  // Validate DATABASE_URL is set
+  if (!DATABASE_URL) {
+    console.error("[startup] ❌ FATAL: DATABASE_URL is not set");
+    console.error("[startup] Expected: postgresql://user:pass@host:port/db");
+    process.exit(1);
+  }
 
-  console.log("[startup] Validating DATABASE_URL...");
-  if (!isValid) {
-    console.error("[startup] ❌ DATABASE_URL is invalid or missing.");
-    console.error("[startup] Expected a PostgreSQL URL starting with postgres:// or postgresql://");
-    console.error("[startup] Current value:", DATABASE_URL ? DATABASE_URL : "<empty>");
+  // Validate DATABASE_URL format strictly
+  const isPostgres = /^postgres(ql)?:\/\//.test(DATABASE_URL);
+  if (!isPostgres) {
+    console.error("[startup] ❌ FATAL: DATABASE_URL format is invalid");
+    console.error("[startup] Expected format: postgresql://user:pass@host:port/db");
+    console.error("[startup] Current value:", DATABASE_URL.substring(0, 50) + "...");
+    console.error("[startup] It appears to be:", 
+      DATABASE_URL.startsWith("file:") ? "SQLite" : 
+      DATABASE_URL.startsWith("/") ? "SQLite file path" :
+      "Unknown database type"
+    );
     process.exit(1);
   }
 
   console.log("[startup] ✓ DATABASE_URL format valid");
+  console.log("[startup] Database host:", new URL(DATABASE_URL).hostname);
 
   // Generate Prisma Client
   console.log("[startup] Generating Prisma Client...");
   try {
-    execSync("npx prisma generate", { stdio: "inherit" });
+    execSync("npx prisma generate", { stdio: "inherit", env: { ...process.env } });
     console.log("[startup] ✓ Prisma Client generated");
   } catch (error) {
     console.error("[startup] ❌ Failed to generate Prisma Client");
@@ -32,24 +49,33 @@ async function startup() {
 
   // Run migrations
   console.log("[startup] Running database migrations...");
+  console.log("[startup] (This connects to the database for the first time)");
   try {
-    execSync("npx prisma migrate deploy", { stdio: "inherit" });
+    execSync("npx prisma migrate deploy", { 
+      stdio: "inherit", 
+      env: { ...process.env }
+    });
     console.log("[startup] ✓ Migrations completed");
   } catch (error) {
-    console.error("[startup] ❌ Migration failed");
+    console.error("[startup] ❌ Migration failed - database may not be accessible");
+    console.error("[startup] Error:", error.message);
     process.exit(1);
   }
 
   // Seed database (non-fatal)
   console.log("[startup] Seeding database...");
   try {
-    execSync("node prisma/seed.js", { stdio: "inherit" });
+    execSync("node prisma/seed.js", { 
+      stdio: "inherit", 
+      env: { ...process.env }
+    });
     console.log("[startup] ✓ Database seeded");
   } catch (error) {
-    console.warn("[startup] ⚠ Seed skipped or already applied");
+    console.warn("[startup] ⚠ Seed skipped (admin user may already exist)");
   }
 
   // Start Next.js server
+  console.log("[startup] ═══════════════════════════════════════");
   console.log("[startup] Starting Next.js server...");
   
   const dev = process.env.NODE_ENV !== "production";
@@ -75,11 +101,13 @@ async function startup() {
     const parsedUrl = parse(req.url, true);
     handle(req, res, parsedUrl);
   }).listen(port, () => {
+    console.log(`[startup] ═══════════════════════════════════════`);
     console.log(`[startup] 🦆 Duc Panel running on port ${port}`);
+    console.log(`[startup] ═══════════════════════════════════════`);
   });
 }
 
 startup().catch((err) => {
-  console.error("[startup] Fatal error:", err);
+  console.error("[startup] ❌ Fatal error:", err.message);
   process.exit(1);
 });

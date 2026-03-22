@@ -1,4 +1,4 @@
-# Build stage - NO database operations
+# Build stage - NO runtime environment variables needed
 FROM node:22.22.1-alpine AS builder
 
 WORKDIR /app
@@ -12,14 +12,14 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Set environment for build (DATABASE_URL not needed for Next.js build)
+# Set environment for build (only NODE_ENV needed for Next.js build optimization)
 ENV PRISMA_SKIP_VALIDATION=true
 ENV NODE_ENV=production
 
-# Generate Prisma Client without validating datasource
+# Generate Prisma Client without validating datasource (JWT_SECRET not needed at build time)
 RUN npx prisma generate
 
-# Build Next.js
+# Build Next.js (does NOT require DATABASE_URL or JWT_SECRET)
 RUN npm run build
 
 # Runtime stage
@@ -47,4 +47,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 3000), (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
 
 # Start the application via startup script
+# Dependencies injected at runtime: DATABASE_URL, JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD
 CMD ["node", "scripts/startup.js"]

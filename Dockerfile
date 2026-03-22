@@ -1,5 +1,5 @@
 # Build stage - NO runtime environment variables needed
-FROM node:22.22.1-alpine AS builder
+FROM node:22.22.1-bookworm AS builder
 
 WORKDIR /app
 
@@ -23,7 +23,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # Runtime stage
-FROM node:22.22.1-alpine
+FROM node:22.22.1-bookworm
 
 WORKDIR /app
 

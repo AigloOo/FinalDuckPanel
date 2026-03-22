@@ -46,9 +46,11 @@ npm run dev
 
 1. Fork ce repository
 2. Créer un nouveau service Web sur [Render](https://render.com)
-3. Connecter votre repository GitHub
-4. Render détectera automatiquement `render.yaml`
-5. Configurer les variables d'environnement :
+3. Créer une base PostgreSQL sur Render et la lier au service Web
+4. Connecter votre repository GitHub
+5. Render détectera automatiquement `render.yaml`
+6. Configurer les variables d'environnement :
+   - `DATABASE_URL` : URL PostgreSQL (automatiquement injectée si vous utilisez le blueprint `render.yaml`)
    - `ADMIN_EMAIL` : votre email
    - `ADMIN_PASSWORD` : votre mot de passe
    - `NEXT_PUBLIC_APP_URL` : l'URL de votre app Render

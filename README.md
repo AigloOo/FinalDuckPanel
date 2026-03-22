@@ -27,6 +27,21 @@ npm run db:seed
 npm run dev
 ```
 
+## Déploiement sur Railway
+
+1. Fork ce repository
+2. Créer un nouveau projet sur [Railway](https://railway.com)
+3. Ajouter un service **PostgreSQL** depuis le dashboard Railway
+4. Connecter votre repository GitHub en ajoutant un nouveau service Web
+5. Railway détectera automatiquement `railway.toml`
+6. Dans les variables d'environnement du service Web, ajouter :
+   - `DATABASE_URL` : copiez la variable `DATABASE_URL` fournie par le service PostgreSQL Railway
+   - `ADMIN_EMAIL` : votre email
+   - `ADMIN_PASSWORD` : votre mot de passe
+   - `NEXT_PUBLIC_APP_URL` : l'URL de votre app Railway (ex: `https://mon-app.up.railway.app`)
+   - `JWT_SECRET` : une chaîne aléatoire de 32+ caractères
+   - `UPLOAD_DIR` : `/app/uploads` (optionnel)
+
 ## Déploiement sur Render
 
 1. Fork ce repository
@@ -43,9 +58,9 @@ npm run dev
 
 | Variable | Description | Exemple |
 |----------|-------------|---------|
-| `DATABASE_URL` | Chemin SQLite | `file:./data/duck.db` |
+| `DATABASE_URL` | URL de connexion PostgreSQL | `postgresql://user:pass@host:5432/db` |
 | `JWT_SECRET` | Secret JWT (32+ chars) | `random-secret` |
 | `ADMIN_EMAIL` | Email de connexion | `jean@example.com` |
 | `ADMIN_PASSWORD` | Mot de passe | `monmotdepasse` |
 | `UPLOAD_DIR` | Dossier uploads | `./uploads` |
-| `NEXT_PUBLIC_APP_URL` | URL de l'app | `https://mon-app.onrender.com` |
+| `NEXT_PUBLIC_APP_URL` | URL de l'app | `https://mon-app.up.railway.app` |

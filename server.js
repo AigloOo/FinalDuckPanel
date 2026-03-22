@@ -10,7 +10,12 @@ const handle = app.getRequestHandler();
 
 const uploadsDir = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
 
-[path.join(process.cwd(), 'data'), uploadsDir].forEach((dir) => {
+const databaseUrl = process.env.DATABASE_URL || '';
+const isPostgres = databaseUrl.startsWith('postgresql') || databaseUrl.startsWith('postgres');
+
+const dirsToCreate = isPostgres ? [uploadsDir] : [path.join(process.cwd(), 'data'), uploadsDir];
+
+dirsToCreate.forEach((dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
     console.log(`Created directory: ${dir}`);

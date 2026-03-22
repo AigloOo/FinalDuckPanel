@@ -38,12 +38,11 @@ next-env.d.ts
 
 # database
 /data/
+/prisma/data/
 
 # uploads
 /uploads/
 
-# prisma
-prisma/migrations/
 
 # OS
 Thumbs.db

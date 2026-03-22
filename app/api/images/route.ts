@@ -67,7 +67,8 @@ export async function POST(request: NextRequest) {
         },
       });
       return NextResponse.json(image, { status: 201 });
-    } catch {
+    } catch (sharpError) {
+      console.warn('Sharp optimization failed, saving original file:', sharpError);
       await writeFile(filepath, buffer);
       const image = await prisma.image.create({
         data: {

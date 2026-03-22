@@ -3,12 +3,14 @@ import { unlink } from 'fs/promises';
 import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  const { id } = await params;
+
   const image = await prisma.image.findFirst({
-    where: { id: params.id, userId: session.userId },
+    where: { id, userId: session.userId },
   });
   if (!image) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
@@ -18,6 +20,6 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     console.warn('File not found:', image.path);
   }
 
-  await prisma.image.delete({ where: { id: params.id } });
+  await prisma.image.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }

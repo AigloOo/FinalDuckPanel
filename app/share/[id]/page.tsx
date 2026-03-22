@@ -2,9 +2,10 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { formatDate, formatBytes } from '@/lib/utils';
 
-export default async function SharePage({ params }: { params: { id: string } }) {
+export default async function SharePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const image = await prisma.image.findUnique({
-    where: { publicId: params.id },
+    where: { publicId: id },
   });
 
   if (!image) notFound();

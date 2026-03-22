@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import { prisma } from '@/lib/db';
 
-export async function GET(request: NextRequest, { params }: { params: { publicId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ publicId: string }> }) {
+  const { publicId } = await params;
   const image = await prisma.image.findUnique({
-    where: { publicId: params.publicId },
+    where: { publicId },
   });
 
   if (!image) return NextResponse.json({ error: 'Not found' }, { status: 404 });

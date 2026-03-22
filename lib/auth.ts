@@ -10,10 +10,11 @@ export interface JWTPayload {
   userId: string;
   email: string;
   name: string;
+  [key: string]: unknown;
 }
 
 export async function signToken(payload: JWTPayload): Promise<string> {
-  return await new SignJWT(payload as unknown as Record<string, unknown>)
+  return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('7d')

@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
     const ext = path.extname(file.name) || '.jpg';
     const filename = `${publicId}${ext}`;
     const filepath = path.join(uploadDir, filename);
+    const extRegex = new RegExp(`\\${ext}$`);
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -49,12 +50,12 @@ export async function POST(request: NextRequest) {
         .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
         .jpeg({ quality: 85 })
         .toBuffer();
-      const jpegFilepath = filepath.replace(new RegExp(`\\${ext}$`), '.jpg');
+      const jpegFilepath = filepath.replace(extRegex, '.jpg');
       await writeFile(jpegFilepath, optimized);
       
       const image = await prisma.image.create({
         data: {
-          filename: filename.replace(new RegExp(`\\${ext}$`), '.jpg'),
+          filename: filename.replace(extRegex, '.jpg'),
           originalName: file.name,
           mimeType: 'image/jpeg',
           size: optimized.length,

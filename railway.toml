@@ -1,5 +1,6 @@
 [build]
 dockerfile = "Dockerfile"
+# Docker is the ONLY source of truth - no buildCommand or startCommand needed
 
 [deploy]
 restartPolicyType = "on_failure"
@@ -8,3 +9,10 @@ restartPolicyMaxRetries = 3
 [env]
 PRISMA_SKIP_VALIDATION = "true"
 NODE_ENV = "production"
+# Runtime variables injected by Railway:
+# - DATABASE_URL (from PostgreSQL service)
+# - JWT_SECRET 
+# - ADMIN_EMAIL
+# - ADMIN_PASSWORD
+# - NEXT_PUBLIC_APP_URL (optional)
+# - UPLOAD_DIR (optional)

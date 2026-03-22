@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "node server.js",
-    "start:prod": "node scripts/startup.js",
+    "start": "node scripts/startup.js",
     "db:migrate": "prisma migrate dev",
     "db:seed": "node prisma/seed.js"
   },

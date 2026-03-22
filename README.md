@@ -27,71 +27,97 @@ npm run db:seed
 npm run dev
 ```
 
-## Déploiement sur Railway
+## Déploiement sur Railway (Recommandé)
 
-1. Fork ce repository
-2. Créer un nouveau projet sur [Railway](https://railway.com)
-3. **Ajouter un service PostgreSQL** depuis le dashboard Railway
-4. **Connecter votre repository GitHub en ajoutant un nouveau service Web**
-5. Railway détectera automatiquement `railway.toml` et utilisera le Dockerfile
-6. **IMPORTANT: Vérifier que DATABASE_URL est injecté correctement**
-   - Aller dans le service Web → Variables → vérifier que `DATABASE_URL` est présent
-   - Sa valeur doit être de la forme: `postgresql://...`
-   - **Si manquant ou mal formé, l'app aura l'erreur: "The table `main.User` does not exist"**
+### Configuration requise
 
-7. Dans les variables d'environnement du service Web, ajouter:
-   - `ADMIN_EMAIL` : votre email (ex: `jean@example.com`)
-   - `ADMIN_PASSWORD` : votre mot de passe sécurisé
-   - `NEXT_PUBLIC_APP_URL` : l'URL de votre app Railway (ex: `https://ducpanel-prod.up.railway.app`)
-   - `JWT_SECRET` : une chaîne aléatoire de 32+ caractères
+1. **Railway Project** - Créer un nouveau projet sur [Railway](https://railway.com)
+2. **PostgreSQL Database** - Ajouter une base de données PostgreSQL depuis le dashboard
+3. **Repository GitHub** - Fork ce repository et connecter à Railway
 
-8. Redéployer depuis Railway si nécessaire
+### Étapes de déploiement
 
-### Diagnostic sur Railway
+1. Fork ce repository sur GitHub
+2. Dans Railway, créer un **nouveau projet**
+3. **Ajouter un service PostgreSQL** (templates → PostgreSQL → Deploy)
+4. **Ajouter un service Web**:
+   - Sélectionner "Repo" et connecter votre fork
+   - Railway détectera automatiquement le `Dockerfile`
+   - Laisser Railway configurer le déploiement
 
-Si vous avez une erreur `"The table 'main.User' does not exist"` au login:
+5. **Lier PostgreSQL au Web service**:
+   - Dans le service Web, aller à l'onglet "Variables"
+   - Railway devrait avoir ajouté automatiquement `DATABASE_URL`
+   - **Vérifier que DATABASE_URL existe et commence par `postgresql://`**
+
+6. **Ajouter variables d'environnement** (Web service → Variables):
+
+| Variable | Valeur | Exemple |
+|----------|--------|---------|
+| `ADMIN_EMAIL` | Email de connexion | `admin@example.com` |
+| `ADMIN_PASSWORD` | Mot de passe sécurisé | `MyStrongPassword123!` |
+| `JWT_SECRET` | Clé secrète (32+ chars) | `your-random-secret-32-characters-here` |
+| `NEXT_PUBLIC_APP_URL` | URL public de l'app (optional) | `https://ducpanel.up.railway.app` |
+| `UPLOAD_DIR` | Dossier uploads (optional) | `/app/uploads` |
+
+7. **Déployer**: Railway va automatiquement réaliser un redéploiement
+
+### Diagnostic des problèmes
+
+#### ❌ Erreur: "Unable to require libquery_engine-linux-musl.so.node"
+
+**Cause**: Alpine Linux manque OpenSSL
+**Solution**: Docker image automatiquement utilise Debian (bookworm) - redéployer
+
+#### ❌ Erreur: "Can't reach database server at `opt:5432`"
+
+**Cause**: DATABASE_URL est malformée ou vide
+**Action**:
+1. Aller dans Railway → Web service → Variables
+2. **Vérifier qu'il y a une variable `DATABASE_URL`**
+3. **Sa valeur doit commencer par `postgresql://` ou `postgres://`**
+4. Si elle n'existe PAS ou est vide:
+   - Railway → PostgreSQL service → onglet "Variables"
+   - Copier la valeur de `DATABASE_URL` de là
+   - Coller dans le service Web → Variables
+5. **Redéployer le service Web**
+
+#### ❌ Erreur: "The table 'main.User' does not exist"
+
+**Cause**: Migrations n'ont pas runs (Database_URL pointait vers SQLite)
+**Solution**: Corriger DATABASE_URL (voir ci-dessus), puis redéployer
+
+#### ✅ Vérifier la Health
 
 ```bash
-# Accédez à votre app via: https://your-app-url.up.railway.app/api/health
-# Cela affichera le statut de connexion à la base de données
+curl https://your-app-url.up.railway.app/api/health
+
+# Doit retourner:
+{
+  "status": "✓ Connected",
+  "diagnostics": {
+    "dbUrlFormat": "PostgreSQL",
+    "dbHost": "your-db-host"
+  }
+}
 ```
-
-## Déploiement sur Render
-
-1. Fork ce repository
-2. Créer un nouveau service Web sur [Render](https://render.com)
-3. **Créer une base PostgreSQL Render et la lier au service Web**
-4. Connecter votre repository GitHub
-5. Render détectera automatiquement `render.yaml`
-6. Configurer les variables d'environnement :
-   - `DATABASE_URL` : auto-injectée/liée de la base PostgreSQL
-   - `ADMIN_EMAIL` : votre email
-   - `ADMIN_PASSWORD` : votre mot de passe
-   - `NEXT_PUBLIC_APP_URL` : l'URL de votre app Render
-   - `JWT_SECRET` : une clé secrète (32+ chars)
 
 ## Variables d'environnement
 
 | Variable | Description | Exemple | Requis |
 |----------|-------------|---------|--------|
-| `DATABASE_URL` | URL de connexion PostgreSQL | `postgresql://user:pass@host:5432/db` | ✓ |
+| `DATABASE_URL` | URL PostgreSQL | `postgresql://user:pass@host:5432/db` | ✓ (auto) |
 | `JWT_SECRET` | Secret JWT (32+ chars) | `your-random-secret-here-at-least-32-chars` | ✓ |
-| `ADMIN_EMAIL` | Email de connexion admin | `jean@example.com` | ✓ |
-| `ADMIN_PASSWORD` | Mot de passe admin | `securepwd123` | ✓ |
-| `NEXT_PUBLIC_APP_URL` | URL publique de l'app | `https://mon-app.up.railway.app` | ✓ |
-| `UPLOAD_DIR` | Dossier uploads | `/app/uploads` (Railway) ou `/opt/render/project/uploads` (Render) | Non |
+| `ADMIN_EMAIL` | Email de connexion admin | `admin@example.com` | ✓ |
+| `ADMIN_PASSWORD` | Mot de passe admin | `SecurePassword123!` | ✓ |
+| `NEXT_PUBLIC_APP_URL` | URL publique de l'app | `https://ducpanel.up.railway.app` | Non |
+| `UPLOAD_DIR` | Dossier uploads | `/app/uploads` | Non |
+| `NODE_ENV` | Environnement | `production` | Auto |
 
-### Vérifier la configuration
+## Architecture
 
-Une fois déployé, vérifier que tout fonctionne:
-
-```bash
-# Vérifier la santé et la connexion DB
-curl https://your-app-url/api/health
-
-# Doit retourner:
-# {
-#   "status": "✓ Connected",
-#   "diagnostics": { "dbUrlFormat": "PostgreSQL", ... }
-# }
-```
+- **Frontend**: Next.js 15, React 18, Tailwind CSS
+- **Backend**: Next.js API Routes
+- **Database**: PostgreSQL (Prisma ORM)
+- **Auth**: JWT + bcryptjs
+- **Deployment**: Docker → Railway

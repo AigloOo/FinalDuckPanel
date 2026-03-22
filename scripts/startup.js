@@ -16,26 +16,49 @@ async function startup() {
   // Validate DATABASE_URL is set
   if (!DATABASE_URL) {
     console.error("[startup] ❌ FATAL: DATABASE_URL is not set");
-    console.error("[startup] Expected: postgresql://user:pass@host:port/db");
+    console.error("[startup] Expected: postgresql://user:pass@host:5432/db");
+    console.error("[startup] Railway should auto-inject this from PostgreSQL service");
     process.exit(1);
   }
 
-  // Validate DATABASE_URL format strictly
+  // Validate DATABASE_URL is a valid PostgreSQL URL
   const isPostgres = /^postgres(ql)?:\/\//.test(DATABASE_URL);
   if (!isPostgres) {
-    console.error("[startup] ❌ FATAL: DATABASE_URL format is invalid");
-    console.error("[startup] Expected format: postgresql://user:pass@host:port/db");
-    console.error("[startup] Current value:", DATABASE_URL.substring(0, 50) + "...");
-    console.error("[startup] It appears to be:", 
-      DATABASE_URL.startsWith("file:") ? "SQLite" : 
-      DATABASE_URL.startsWith("/") ? "SQLite file path" :
-      "Unknown database type"
-    );
+    console.error("[startup] ❌ FATAL: DATABASE_URL is malformed");
+    console.error("[startup] Expected format: postgresql://user:pass@host:5432/db");
+    console.error("[startup] Current value:", DATABASE_URL.substring(0, 80));
+    console.error("[startup] ");
+    console.error("[startup] Detected type:");
+    if (DATABASE_URL.startsWith("file:")) {
+      console.error("[startup]   SQLite (file:) - NOT supported");
+    } else if (DATABASE_URL.startsWith("/")) {
+      console.error("[startup]   SQLite file path - NOT supported");
+    } else if (DATABASE_URL.includes("://")) {
+      console.error("[startup]   Unknown protocol -", DATABASE_URL.split("://")[0] + "://");
+    } else if (DATABASE_URL.includes(":")) {
+      console.error("[startup]   Looks like partial host:port -", DATABASE_URL);
+    } else {
+      console.error("[startup]   Unknown format");
+    }
+    console.error("[startup] ");
+    console.error("[startup] Fix: In Railway's Web service Variables, ensure:");
+    console.error("[startup]   DATABASE_URL is set AND points to PostgreSQL service");
+    process.exit(1);
+  }
+
+  let dbHost = "unknown";
+  try {
+    const url = new URL(DATABASE_URL);
+    dbHost = url.hostname;
+  } catch (e) {
+    console.error("[startup] ❌ FATAL: DATABASE_URL is not a valid URL");
+    console.error("[startup] Error:", e.message);
     process.exit(1);
   }
 
   console.log("[startup] ✓ DATABASE_URL format valid");
-  console.log("[startup] Database host:", new URL(DATABASE_URL).hostname);
+  console.log("[startup] Database host:", dbHost);
+  console.log("[startup] ");
 
   // Generate Prisma Client
   console.log("[startup] Generating Prisma Client...");
@@ -49,7 +72,7 @@ async function startup() {
 
   // Run migrations
   console.log("[startup] Running database migrations...");
-  console.log("[startup] (This connects to the database for the first time)");
+  console.log("[startup] (Connecting to database for the first time)");
   try {
     execSync("npx prisma migrate deploy", { 
       stdio: "inherit", 
@@ -57,8 +80,13 @@ async function startup() {
     });
     console.log("[startup] ✓ Migrations completed");
   } catch (error) {
-    console.error("[startup] ❌ Migration failed - database may not be accessible");
+    console.error("[startup] ❌ Migration failed");
     console.error("[startup] Error:", error.message);
+    console.error("[startup] ");
+    console.error("[startup] This likely means:");
+    console.error("[startup]   - DATABASE_URL is incorrect or host is unreachable");
+    console.error("[startup]   - PostgreSQL service is not running");
+    console.error("[startup]   - PostgreSQL credentials are wrong");
     process.exit(1);
   }
 
